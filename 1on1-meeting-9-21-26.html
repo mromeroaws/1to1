@@ -133,8 +133,8 @@
   <div class="wrap">
     <div class="meta">
       <span>Date: <input id="mDate" type="text" value="September 21, 2026" aria-label="Meeting date"></span>
-      <span>With: <input id="mWith" type="text" placeholder="Name" aria-label="Meeting with"> <span class="role">VP, Marketing, Communications &amp; Strategy</span></span>
-      <span>Next 1:1: <input id="mNext" type="text" placeholder="Add date" aria-label="Next meeting"></span>
+      <span>With: <input id="mWith" type="text" value="Cassie Burrell" aria-label="Meeting with"> <span class="role">VP, Marketing, Communications &amp; Strategy</span></span>
+      <span>Next 1:1: <input id="mNext" type="text" value="September 28, 2026" aria-label="Next meeting"></span>
     </div>
     <h1>1:1 Meeting Summary</h1>
     <svg class="swoosh" viewBox="0 0 220 22" aria-hidden="true"><rect x="0" y="8" width="96" height="6" rx="3" fill="#F58220"/></svg>
@@ -287,6 +287,16 @@
   const usd = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
   const RATE = 12596.80 / 476610;
 
+  // Next 1:1 defaults to the Monday after the meeting date
+  const mDate = document.getElementById('mDate'), mNext = document.getElementById('mNext');
+  function nextMonday(){
+    const d = new Date(mDate.value);
+    if (isNaN(d)) return;
+    d.setDate(d.getDate() + (((8 - d.getDay()) % 7) || 7));
+    mNext.value = d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  }
+  mDate.addEventListener('change', nextMonday);
+
   // Overage estimator
   const visits = document.getElementById('visits'), ent = document.getElementById('ent');
   function calc(){
@@ -340,7 +350,7 @@
   // Copy as email
   function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
   document.getElementById('copyBtn').onclick = async () => {
-    const who = document.getElementById('mWith').value.trim();
+    const who = document.getElementById('mWith').value.trim().split(' ')[0];
     const tasks = boxes.map(b => `${b.checked ? '[x]' : '[ ]'} ${b.closest('li').querySelector('.t').textContent}`).join('\n');
     const text =
 `Hi${who ? ' ' + who : ''},
@@ -367,7 +377,7 @@ TIME OFF
 NEXT STEPS
 ${tasks}
 
-I'll prepare a Claude report for our next session and future 1:1s.
+I'll prepare a Claude report for our next session (${mNext.value}) and future 1:1s.
 
 Thanks!`;
     try { await navigator.clipboard.writeText(text); toast('Summary copied. Paste it into your email.'); }
